@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use lib './lib';
 use base 'LEOCHARRE::CLI';
 use File::PathInfo::Ext;
 
@@ -9,6 +10,9 @@ my $files = argv_aspaths() or man();
 scalar @$files or man();
 
 my $f = new File::PathInfo::Ext;
+debug("f instanced\n");
+
+
 RENAME : for (@$files){
 	$f->set($_) or warn("$0, bad file? : $_") and next RENAME;
 	$f->is_file or warn("$0, is not file: $_") and next RENAME;

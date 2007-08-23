@@ -4,8 +4,8 @@ use Carp;
 use Cwd;
 use Getopt::Std;
 use File::Which 'which';
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.2 $ =~ /(\d+)/g;
-$main::DEBUG=0;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)/g;
+#use LEOCHARRE::DEBUG;
 
 =pod
 
@@ -40,9 +40,7 @@ argument is the question for the user
 
 	yn('are you sure you want to X?') or exit;
 
-=head2 force_root()
 
-will force program to exit if user if whoami is not root.
 
 =head2 _scriptname()
 
@@ -55,21 +53,41 @@ if script has -d flag, this is on.
 
 =cut
 
-sub main::DEBUG {
-	my $val = shift;
-	if (defined $val){
-		$main::DEBUG = $val;
-	}	
-	return $main::DEBUG;
+
+$main::DEBUG = 0;
+
+sub main::DEBUG : lvalue {
+   $main::DEBUG;   
+}
+
+sub main::debug {
+   $main::DEBUG or return 1;
+   my $msg = shift;
+   
+   print STDERR " $0, $msg\n";
+   return 1;
 }
 
 
+=head1 USER TYPE SUBS
+
+=head2 force_root()
+
+will force program to exit if user if whoami is not root.
+
+=head2 running_as_root()
+
+returns boolean
+
+=head2 whoami()
+
+returns who you are running as, name
+if which('whoami') does not return, returns undef
 
 
+=cut
 
-
-sub main::whoami {
-	
+sub main::whoami {	
 	unless (defined $::WHOAMI){
 		if (my $wb = which('whoami')){
 			my $whoami = `$wb`;
@@ -82,25 +100,29 @@ sub main::whoami {
 		}
 	}
 
-
 	$::WHOAMI or return;
 
 	return $::WHOAMI;	
 }
 
-=head2 whoami()
-
-returns who you are running as, name
-if which('whoami') does not return, returns undef
-
-=cut
-
-
-
 sub main::force_root {
-	( whoami() and whoami() eq 'root') or print "$0, only root can use this." and exit;
+	main::running_as_root() or print "$0, only root can use this." and exit;
 	return 1;
 }
+
+sub main::running_as_root {
+   my $whoami = main::whoami() or return 0;
+   $whoami eq 'root' or return 0;
+   return 1;
+}
+
+
+
+
+
+=head1 CLI PARAMETERS AND OPTIONS
+
+=cut
 
 sub main::gopts {
 	my $opts = shift;
@@ -126,7 +148,7 @@ sub main::gopts {
 	}
 
 	if ($o->{d}){
-		$::DEBUG = 1;
+		$main::DEBUG = 1;
 	}
 
 
@@ -137,10 +159,21 @@ sub main::gopts {
 	return $o;
 }
 
+
+
+
+
+
+
 sub main::man {
 	my $name = main::_scriptname();
    print `man $name` and exit; 
 }
+
+
+
+
+
 
 sub main::_scriptname{
 	my $name = $0 or return;
@@ -189,6 +222,9 @@ sub main::argv_aspaths_loose {
 }
 
 
+
+
+
 sub main::yn {
         my $question = shift; $question ||='Your answer? ';
         my $val = undef;
@@ -208,6 +244,8 @@ sub main::yn {
 
 
 
+
+
 sub main::config {
 	my $abs_conf = shift;
 
@@ -216,6 +254,20 @@ sub main::config {
 	my $conf = YAML::LoadFile($abs_conf);
 	return $conf;
 }
+
+
+
+
+sub main::mktmpdir {
+   my $d = '/tmp/tmp_'.time().( int rand(2000000) );
+
+   return undef and warn("$0, $d exists") if -d $d;
+
+   mkdir $d or die("$0, cannot make $d, $!");
+
+   return $d;
+}
+
 
 
 1;
@@ -254,6 +306,13 @@ Same as argv_aspaths(), but does not check for existence, only resolved to abs p
 will print manual and exit.
 
 
+=head2 mktmpdir()
+
+will make a temp dir in /tmp/tmp_$rand
+returns abs path to dir
+returns undef and warns if it cant
+will not overrite an existing dir, returns undef if already exists (unlikely).
+
 =head1 CLI OPTIONS AND PARAMETERS
 
 =head2 gopts()
@@ -276,15 +335,14 @@ Adds a (bool) and f(value), v and h are still enforced.
 File::Which 'which'
 Cwd
 
-
-
 =head1 AUTHOR
 
 Leo Charre leocharre at cpan dot org
 
 =head1 LICENSE
 
-This package is free software; you can redistribute it and/or modify it under the same terms as Perl itself, i.e., under the terms of the "Artistic License" or the "GNU General Public License".
+This package is free software; you can redistribute it and/or modify it under the same 
+terms as Perl itself, i.e., under the terms of the "Artistic License" or the "GNU General Public License".
 
 =head1 COPYRIGHT
 

@@ -1,7 +1,11 @@
 use Test::Simple 'no_plan';
-use lib './lib';
+BEGIN { use lib './lib'; }
 use base 'LEOCHARRE::CLI';
 use Cwd;
+
+$DEBUG = 1;
+
+ok( DEBUG , 'DEBUG ok');
 
 ok( _scriptname(),'scriptname returns');
 
@@ -16,3 +20,8 @@ my $iam = whoami();
 
 ok($iam, "whoami() $iam");
 
+
+
+my $tmpd = mktmpdir();
+
+ok($tmpd, "made temp dir $tmpd");
