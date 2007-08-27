@@ -2,6 +2,7 @@ Makefile.PL
 lib/LEOCHARRE/CLI.pm
 MANIFEST
 t/0.t
+t/test.conf
 bin/mkperlbin
 bin/renamerfpi
 META.yml                                 Module meta-data (added by MakeMaker)

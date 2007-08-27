@@ -4,8 +4,7 @@ use Carp;
 use Cwd;
 use Getopt::Std;
 use File::Which 'which';
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)/g;
-#use LEOCHARRE::DEBUG;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.8 $ =~ /(\d+)/g;
 
 =pod
 
