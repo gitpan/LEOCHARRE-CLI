@@ -8,6 +8,9 @@ WriteMakefile(
 		'Carp' => 0,
 		'YAML' => 0,
       'File::Which' => 0,
+      'File::chmod' => 0,
+      'Linux::usermod' => 0,
+
 	},
 	EXE_FILES => ['bin/mkperlbin', 'bin/renamerfpi'],
 );

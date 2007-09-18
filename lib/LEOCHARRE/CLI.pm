@@ -4,7 +4,7 @@ use Carp;
 use Cwd;
 use Getopt::Std;
 use File::Which 'which';
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.8 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.9 $ =~ /(\d+)/g;
 
 =pod
 
@@ -83,6 +83,19 @@ returns boolean
 returns who you are running as, name
 if which('whoami') does not return, returns undef
 
+=head2 get_uid()
+
+argument is username
+returns user id number
+returns nothing if not a user on this system
+this is a way to test if user exists on system
+
+=head2 get_gid()
+
+aregument is group name
+returns gid of group
+if the argument is not a group on the system, returns undef
+with this you can test for the user on system
 
 =cut
 
@@ -98,7 +111,6 @@ sub main::whoami {
 			return;	
 		}
 	}
-
 	$::WHOAMI or return;
 
 	return $::WHOAMI;	
@@ -115,6 +127,42 @@ sub main::running_as_root {
    return 1;
 }
 
+sub main::get_uid {
+  my $name = shift;
+  require Linux::usermod;
+  my $user = Linux::usermod->new($name);
+  my $id = $user->get('uid');
+  $id=~/^\d+$/ or return;
+  return $id;
+}
+
+sub main::get_gid {
+  my $name = shift;   
+  require Linux::usermod;  
+  my $g = Linux::usermod->new($name,1);
+  my $id = $g->get('gid');
+  $id=~/^\d+$/ or return;
+  return $id;
+}
+
+
+
+=head1 FILE SUBS
+
+=head2 get_mode()
+
+argument is path to file on disk
+returns mode in the form 755
+if not on disk returns undef
+
+=cut
+
+sub main::get_mode {
+   my $abs = shift;
+   require File::chmod;
+   my $mod = File::chmod::getmod($abs) or return;
+   return $mod;
+}
 
 
 
@@ -269,6 +317,10 @@ sub main::mktmpdir {
 
 
 
+
+
+
+
 1;
 
 
@@ -303,7 +355,6 @@ Same as argv_aspaths(), but does not check for existence, only resolved to abs p
 =head2 man()
 
 will print manual and exit.
-
 
 =head2 mktmpdir()
 
