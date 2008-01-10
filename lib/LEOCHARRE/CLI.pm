@@ -2,9 +2,7 @@ package LEOCHARRE::CLI;
 use strict;
 use Carp;
 use Cwd;
-use Getopt::Std;
-use File::Which 'which';
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.9 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.10 $ =~ /(\d+)/g;
 
 =pod
 
@@ -101,7 +99,8 @@ with this you can test for the user on system
 
 sub main::whoami {	
 	unless (defined $::WHOAMI){
-		if (my $wb = which('whoami')){
+      require File::Which;
+		if (my $wb = File::Which::which('whoami')){
 			my $whoami = `$wb`;
 			chomp $whoami;
 			$::WHOAMI = $whoami;	
@@ -182,7 +181,8 @@ sub main::gopts {
 	$opts.='vhd';
 	
 	my $o = {};	
-	
+   
+   require Getopt::Std;
 	Getopt::Std::getopts($opts, $o); 
 	
 	if($o->{v}){
@@ -380,10 +380,12 @@ To add options
 
 Adds a (bool) and f(value), v and h are still enforced.
 
-=head1 OTHER IMPORTED SUBS
+=head1 SEE ALSO
 
-File::Which 'which'
+File::Which
+Linux::usermod
 Cwd
+Getopt::Std
 
 =head1 AUTHOR
 
@@ -396,6 +398,6 @@ terms as Perl itself, i.e., under the terms of the "Artistic License" or the "GN
 
 =head1 COPYRIGHT
 
-Copyright (c) 2007 Leo Charre. All rights reserved.
+Copyright (c) 2008 Leo Charre. All rights reserved.
 
 =cut

@@ -12,5 +12,5 @@ WriteMakefile(
       'Linux::usermod' => 0,
 
 	},
-	EXE_FILES => ['bin/mkperlbin', 'bin/renamerfpi'],
+	#EXE_FILES => ['bin/mkperlbin', 'bin/renamerfpi'],
 );
