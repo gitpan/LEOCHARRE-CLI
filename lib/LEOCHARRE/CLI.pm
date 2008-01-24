@@ -2,7 +2,7 @@ package LEOCHARRE::CLI;
 use strict;
 use Carp;
 use Cwd;
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.10 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.11 $ =~ /(\d+)/g;
 
 =pod
 
@@ -52,6 +52,7 @@ if script has -d flag, this is on.
 
 
 $main::DEBUG = 0;
+$main::USAGE = 0;
 
 sub main::DEBUG : lvalue {
    $main::DEBUG;   
@@ -213,8 +214,23 @@ sub main::gopts {
 
 
 sub main::man {
-	my $name = main::_scriptname();
-   print `man $name` and exit; 
+
+   if( defined $main::usage ){
+      my $output = $main::usage;
+      print STDERR "$output\n";
+   }
+
+   elsif( defined &main::usage ){
+      my $output = main::usage();
+      print STDERR "$output\n";
+   }
+
+   else {
+   	my $name = main::_scriptname();
+      print `man $name`; 
+   }
+
+   exit;
 }
 
 
@@ -329,6 +345,10 @@ sub main::mktmpdir {
 
 =head1 PATH ARGUMENTS
 
+You MUST call gopts() BEFORE you call these, if you expect both filename
+arguments AND command arguments. Otherwise you will get garble- because
+you'll interpret things like -f and -d as file instead of options.
+
 =head2 argv_aspaths()
 
 returns array ref of argument variables treated as paths, they are resolved with Cwd::abs_path()
@@ -341,11 +361,13 @@ skips over files not on disk with warnings
 
 =head2 argv_aspaths_strict()
 
-Same as argv_aspaths(), but returns false if any of the file arguments are no longer on disk
+Same as argv_aspaths(), but returns false if 
+any of the file arguments are no longer on disk
 
 =head2 argv_aspaths_loose()
 
-Same as argv_aspaths(), but does not check for existence, only resolved to abs paths
+Same as argv_aspaths(), but does not check for existence, 
+only resolved to abs paths
 
 
 
@@ -356,6 +378,14 @@ Same as argv_aspaths(), but does not check for existence, only resolved to abs p
 
 will print manual and exit.
 
+This first seeks your script for a global variable $usage,  
+then a subroutine named usage()
+prints to screen and exits.
+otherwise it calls man ./pathtoscript
+
+when you invoke -h via the commandline, this is called automatically.
+
+
 =head2 mktmpdir()
 
 will make a temp dir in /tmp/tmp_$rand
@@ -364,6 +394,8 @@ returns undef and warns if it cant
 will not overrite an existing dir, returns undef if already exists (unlikely).
 
 =head1 CLI OPTIONS AND PARAMETERS
+
+This is part of the most useful of subs here.
 
 =head2 gopts()
 
