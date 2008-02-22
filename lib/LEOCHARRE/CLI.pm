@@ -2,7 +2,8 @@ package LEOCHARRE::CLI;
 use strict;
 use Carp;
 use Cwd;
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.11 $ =~ /(\d+)/g;
+use vars qw($VERSION);
+$VERSION = sprintf "%d.%02d", q$Revision: 1.12 $ =~ /(\d+)/g;
 
 =pod
 
@@ -96,6 +97,11 @@ returns gid of group
 if the argument is not a group on the system, returns undef
 with this you can test for the user on system
 
+=head2 user_exists()
+
+argument is username
+returns boolean
+
 =cut
 
 sub main::whoami {	
@@ -129,6 +135,8 @@ sub main::running_as_root {
 
 sub main::get_uid {
   my $name = shift;
+  main::user_exists($name) or return;
+  
   require Linux::usermod;
   my $user = Linux::usermod->new($name);
   my $id = $user->get('uid');
@@ -136,8 +144,17 @@ sub main::get_uid {
   return $id;
 }
 
+sub main::user_exists {
+   my $name = shift;
+   require Linux::usermod;
+   my %u = Linux::usermod->users;
+   $u{$name} or return 0;
+   return 1;
+}
+
 sub main::get_gid {
   my $name = shift;   
+  main::user_exists($name) or return;
   require Linux::usermod;  
   my $g = Linux::usermod->new($name,1);
   my $id = $g->get('gid');
@@ -291,7 +308,6 @@ sub main::argv_aspaths_loose {
 sub main::yn {
         my $question = shift; $question ||='Your answer? ';
         my $val = undef;
-
         until (defined $val){
                 print "$question (y/n): ";
                 $val = <STDIN>;
@@ -311,7 +327,6 @@ sub main::yn {
 
 sub main::config {
 	my $abs_conf = shift;
-
 	require YAML;
 	-f $abs_conf or warn("$0, [$abs_conf] does not exist.") and return;
 	my $conf = YAML::LoadFile($abs_conf);
@@ -323,11 +338,8 @@ sub main::config {
 
 sub main::mktmpdir {
    my $d = '/tmp/tmp_'.time().( int rand(2000000) );
-
    return undef and warn("$0, $d exists") if -d $d;
-
    mkdir $d or die("$0, cannot make $d, $!");
-
    return $d;
 }
 
