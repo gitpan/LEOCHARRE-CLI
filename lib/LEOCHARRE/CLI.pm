@@ -3,7 +3,7 @@ use strict;
 use Carp;
 use Cwd;
 use vars qw($VERSION);
-$VERSION = sprintf "%d.%02d", q$Revision: 1.12 $ =~ /(\d+)/g;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.14 $ =~ /(\d+)/g;
 
 =pod
 
@@ -29,6 +29,10 @@ CLI options:
 argument is abs paht to YAML conf file
 returns conf hash
 warns and returns undef if file is not there
+
+If no argument if provided, will attempt to use heuristics to guess.
+Will use HOME environment variable.
+
 
 =head2 yn()
 
@@ -252,7 +256,12 @@ sub main::man {
 
 
 
-
+sub main::_scriptname_only{
+	my $name = $0 or return;
+	$name=~s/^.+\///;
+   $name=~s/\.\w{1,}$//;
+	return $name;
+}
 
 
 sub main::_scriptname{
@@ -327,11 +336,23 @@ sub main::yn {
 
 sub main::config {
 	my $abs_conf = shift;
+   $abs_conf ||= main::suggest_abs_conf();
 	require YAML;
 	-f $abs_conf or warn("$0, [$abs_conf] does not exist.") and return;
 	my $conf = YAML::LoadFile($abs_conf);
 	return $conf;
 }
+
+sub main::suggest_abs_conf {
+   $ENV{HOME} or return;
+   return ( $ENV{HOME}.'/'. main::_scriptname_only().'.conf');
+}
+
+sub main::suggest_abs_log {
+   $ENV{HOME} or return;
+   return ( $ENV{HOME}.'/'. main::_scriptname_only().'.log');
+}
+
 
 
 
@@ -344,6 +365,14 @@ sub main::mktmpdir {
 }
 
 
+
+sub main::os_is_win {
+   for(qw(dos os2 mswin32)){
+      $^O=~/^$_/i or next;
+      return 1;
+   }
+   return 0;   
+}
 
 
 
@@ -384,7 +413,9 @@ only resolved to abs paths
 
 
 
+=head2 os_is_win()
 
+attempts to match $^O to a windows type os
 
 =head2 man()
 

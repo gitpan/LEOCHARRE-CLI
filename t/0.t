@@ -13,6 +13,34 @@ ok( $scriptname = _scriptname(),'scriptname returns');
 
 ok( $scriptname eq '0.t', 'scriptname is what we expect');
 
+
+my $home = $ENV{HOME};
+
+{
+   $ENV{HOME} = cwd().'/t';
+
+   my $abs_conf = suggest_abs_conf();
+   ok($abs_conf, "suggests $abs_conf conf");
+
+   my $abs_log = suggest_abs_log();
+   ok($abs_log, "suggests $abs_log log");
+
+   my $conf = config();
+   ok( ! defined $conf );
+
+
+   open(FI,'>',$abs_conf) or die;
+   print FI "---\ntest: gotten\n";
+   close FI;
+
+   ok( $conf = config() );
+   ok($conf->{test} eq 'gotten','gotten');
+   unlink $abs_conf;
+}
+
+$ENV{HOME} = $home;
+
+
 #print STDERR " scriptname $scriptname\n";
 
 #ok( yn('please enter y to confirm this works..'),'yn works');
