@@ -3,58 +3,7 @@ use strict;
 use Carp;
 use Cwd;
 use vars qw($VERSION);
-$VERSION = sprintf "%d.%02d", q$Revision: 1.14 $ =~ /(\d+)/g;
-
-=pod
-
-=head1 NAME
-
-LEOCHARRE::CLI - useful subs for coding cli scripts
-
-=head1 DESCRIPTION
-
-I use this module as base for my CLI scripts.
-It standardizes some things
-
-CLI options:
-
-	-d is always debug
-	-h is always print help and exit
-	-v is always print version and exit
-	
-=head1 SUBS
-
-=head2 config()
-
-argument is abs paht to YAML conf file
-returns conf hash
-warns and returns undef if file is not there
-
-If no argument if provided, will attempt to use heuristics to guess.
-Will use HOME environment variable.
-
-
-=head2 yn()
-
-prompt user for y/n confirmation
-will loop until it returs true or false
-argument is the question for the user
-
-	yn('are you sure you want to X?') or exit;
-
-
-
-=head2 _scriptname()
-
-returns name of script, just the name.
-
-=head2 DEBUG
-
-returns boolean
-if script has -d flag, this is on.
-
-=cut
-
+$VERSION = sprintf "%d.%02d", q$Revision: 1.16 $ =~ /(\d+)/g;
 
 $main::DEBUG = 0;
 $main::USAGE = 0;
@@ -65,48 +14,10 @@ sub main::DEBUG : lvalue {
 
 sub main::debug {
    $main::DEBUG or return 1;
-   my $msg = shift;
-   
+   my $msg = shift;   
    print STDERR " $0, $msg\n";
    return 1;
 }
-
-
-=head1 USER TYPE SUBS
-
-=head2 force_root()
-
-will force program to exit if user if whoami is not root.
-
-=head2 running_as_root()
-
-returns boolean
-
-=head2 whoami()
-
-returns who you are running as, name
-if which('whoami') does not return, returns undef
-
-=head2 get_uid()
-
-argument is username
-returns user id number
-returns nothing if not a user on this system
-this is a way to test if user exists on system
-
-=head2 get_gid()
-
-aregument is group name
-returns gid of group
-if the argument is not a group on the system, returns undef
-with this you can test for the user on system
-
-=head2 user_exists()
-
-argument is username
-returns boolean
-
-=cut
 
 sub main::whoami {	
 	unless (defined $::WHOAMI){
@@ -166,31 +77,12 @@ sub main::get_gid {
   return $id;
 }
 
-
-
-=head1 FILE SUBS
-
-=head2 get_mode()
-
-argument is path to file on disk
-returns mode in the form 755
-if not on disk returns undef
-
-=cut
-
 sub main::get_mode {
    my $abs = shift;
    require File::chmod;
    my $mod = File::chmod::getmod($abs) or return;
    return $mod;
 }
-
-
-
-
-=head1 CLI PARAMETERS AND OPTIONS
-
-=cut
 
 sub main::gopts {
 	my $opts = shift;
@@ -228,12 +120,6 @@ sub main::gopts {
 	return $o;
 }
 
-
-
-
-
-
-
 sub main::man {
 
    if( defined $main::usage ){
@@ -254,15 +140,12 @@ sub main::man {
    exit;
 }
 
-
-
 sub main::_scriptname_only{
 	my $name = $0 or return;
 	$name=~s/^.+\///;
    $name=~s/\.\w{1,}$//;
 	return $name;
 }
-
 
 sub main::_scriptname{
 	my $name = $0 or return;
@@ -310,10 +193,6 @@ sub main::argv_aspaths_loose {
 	return \@argv;
 }
 
-
-
-
-
 sub main::yn {
         my $question = shift; $question ||='Your answer? ';
         my $val = undef;
@@ -327,12 +206,6 @@ sub main::yn {
         }
         return $val;
 }
-
-
-
-
-
-
 
 sub main::config {
 	my $abs_conf = shift;
@@ -353,18 +226,12 @@ sub main::suggest_abs_log {
    return ( $ENV{HOME}.'/'. main::_scriptname_only().'.log');
 }
 
-
-
-
-
 sub main::mktmpdir {
    my $d = '/tmp/tmp_'.time().( int rand(2000000) );
    return undef and warn("$0, $d exists") if -d $d;
    mkdir $d or die("$0, cannot make $d, $!");
    return $d;
 }
-
-
 
 sub main::os_is_win {
    for(qw(dos os2 mswin32)){
@@ -375,22 +242,154 @@ sub main::os_is_win {
 }
 
 
-
-
-
 1;
 
+__END__
+
+=pod
+
+=head1 NAME
+
+LEOCHARRE::CLI - useful subs for coding cli scripts
+
+=head1 DESCRIPTION
+
+I use this module as base for my CLI scripts.
+It standardizes some things.
+
+=head1 PROMPT
+
+=head2 yn()
+
+prompt user for y/n confirmation
+will loop until it returs true or false
+argument is the question for the user
+
+	yn('are you sure you want to destroy something?') or exit;
+
+=cut
 
 
 
 
-=head1 PATH ARGUMENTS
+
+
+
+
+=head1 DEBUG
+
+=head2 DEBUG()
+
+returns boolean
+if script has -d flag, this is on.
+
+=head2 debug()
+
+Use to print to STDERR if DEBUG is on.
+
+   debug('reached that part in our program..');
+
+
+
+=cut
+
+
+
+
+
+=head1 SYSTEM AND ENVIRONMENT
+
+All my scripts are meant to be run on POSIX systems. Specifically gnu linux.
+
+=head2 _scriptname()
+
+Returns name of script, just the name.
+
+=head2 os_is_win()
+
+attempts to match $^O to a windows type os
+
+=head2 force_root()
+
+Will force program to exit if whoami() is not root.
+
+=head2 running_as_root()
+
+Returns boolean, checks if we are running as root.
+
+=head2 whoami()
+
+Returns who you are running as, name. 
+If which('whoami') does not return, returns undef
+
+=head2 get_uid()
+
+Argument is username.
+Returns user id number.
+Returns nothing if not a user on this system.
+This is a way to test if user exists on system.
+
+=head2 get_gid()
+
+Argument is group name.
+Returns gid of group.
+If the argument is not a group on the system, returns undef.
+With this you can test for the user on system.
+
+=head2 user_exists()
+
+Argument is username.
+Returns boolean.
+
+=cut
+
+
+
+
+
+
+
+
+=head1 FILE SUBS
+
+=head2 get_mode()
+
+argument is path to file on disk
+returns mode in the form 755
+if not on disk returns undef
+
+=cut
+
+
+
+
+
+
+
+
+
+
+
+
+=head1 COMMAND LINE ARGUMENTS
+
+Arguments to command line interface.
+
+CLI options:
+
+	-d is always debug
+	-h is always print help and exit
+	-v is always print version and exit
+	
+
+
+=head2 PATH ARGUMENTS
 
 You MUST call gopts() BEFORE you call these, if you expect both filename
 arguments AND command arguments. Otherwise you will get garble- because
 you'll interpret things like -f and -d as file instead of options.
 
-=head2 argv_aspaths()
+=head3 argv_aspaths()
 
 returns array ref of argument variables treated as paths, they are resolved with Cwd::abs_path()
 Any arguments that do not resolve, are skipped with a warning.
@@ -400,47 +399,28 @@ returns undef if no @ARGVS or none of the args are on disk
 skips over files not on disk with warnings
 
 
-=head2 argv_aspaths_strict()
+=head3 argv_aspaths_strict()
 
 Same as argv_aspaths(), but returns false if 
 any of the file arguments are no longer on disk
 
-=head2 argv_aspaths_loose()
+=head3 argv_aspaths_loose()
 
 Same as argv_aspaths(), but does not check for existence, 
 only resolved to abs paths
 
+=cut
 
 
 
-=head2 os_is_win()
-
-attempts to match $^O to a windows type os
-
-=head2 man()
-
-will print manual and exit.
-
-This first seeks your script for a global variable $usage,  
-then a subroutine named usage()
-prints to screen and exits.
-otherwise it calls man ./pathtoscript
-
-when you invoke -h via the commandline, this is called automatically.
 
 
-=head2 mktmpdir()
 
-will make a temp dir in /tmp/tmp_$rand
-returns abs path to dir
-returns undef and warns if it cant
-will not overrite an existing dir, returns undef if already exists (unlikely).
 
-=head1 CLI OPTIONS AND PARAMETERS
 
-This is part of the most useful of subs here.
+=head2 OPTIONS AND PARAMETERS
 
-=head2 gopts()
+=head3 gopts()
 
 returns hash of options
 uses Getopt::Std, forces v for version, h for help d for debug
@@ -455,6 +435,58 @@ To add options
 
 Adds a (bool) and f(value), v and h are still enforced.
 
+See Getopt::Std
+
+=head2 config()
+
+argument is abs paht to YAML conf file
+returns conf hash
+warns and returns undef if file is not there
+
+If no argument if provided, will attempt to use heuristics to guess.
+Will use HOME environment variable.
+
+=head2 suggest_abs_conf()
+
+=head2 suggest_abs_log()
+
+=cut
+
+
+
+
+
+
+=head1 HELP
+
+=head2 man()
+
+will print manual and exit.
+
+This first seeks your script for a global variable $usage,  
+then a subroutine named usage()
+prints to screen and exits.
+otherwise it calls man ./pathtoscript
+
+when you invoke -h via the commandline, this is called automatically.
+
+=head2 mktmpdir()
+
+will make a temp dir in /tmp/tmp_$rand
+returns abs path to dir
+returns undef and warns if it cant
+will not overrite an existing dir, returns undef if already exists (unlikely).
+
+=cut
+
+
+
+
+
+
+
+
+
 =head1 SEE ALSO
 
 File::Which
@@ -462,9 +494,20 @@ Linux::usermod
 Cwd
 Getopt::Std
 
+=head1 CAVEATS
+
+This module is for gnu linux. It will not even install on non POSIX systems.
+Don't even try it, the installer checks for that.
+
+There are no plans to port any of my code to other "systems".
+
 =head1 AUTHOR
 
 Leo Charre leocharre at cpan dot org
+
+=head1 BUGS
+
+I make fixes and updates as quickly as I can. Please contact me for any suggestions, etc.
 
 =head1 LICENSE
 
