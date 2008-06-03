@@ -4,19 +4,38 @@ use lib './lib';
 use base 'LEOCHARRE::CLI';
 use Cwd;
 
+
+# is env HOME set?
+
 $DEBUG = 1;
+ok( DEBUG , 'DEBUG ok a');
+ok( DEBUG() , 'DEBUG()');
+ok( debug('debug sub'), 'debug()');
 
-ok( DEBUG , 'DEBUG ok');
 
+
+
+# scriptname
 my $scriptname;
 ok( $scriptname = _scriptname(),'scriptname returns');
-
 ok( $scriptname eq '0.t', 'scriptname is what we expect');
 
 
-my $home = $ENV{HOME};
 
+# Can  we get env home
+if( !$ENV{HOME}  ){
+   print STDERR "Could not determine ENV HOME\n";   
+   $ENV{HOME} = cwd().'/t';
+}
+
+
+
+# because we change for a tiny test... so we want to remember the original value
+my $home = $ENV{HOME};
 {
+
+   # because we change for a tiny test...
+
    $ENV{HOME} = cwd().'/t';
 
    my $abs_conf = suggest_abs_conf();
@@ -35,6 +54,7 @@ my $home = $ENV{HOME};
 
    ok( $conf = config() );
    ok($conf->{test} eq 'gotten','gotten');
+
    unlink $abs_conf;
 }
 
@@ -42,8 +62,9 @@ $ENV{HOME} = $home;
 
 
 #print STDERR " scriptname $scriptname\n";
-
 #ok( yn('please enter y to confirm this works..'),'yn works');
+
+
 
 
 ok( -f './t/test.conf', 'test conf file exists');
@@ -67,19 +88,6 @@ ok($c," config returned ");
    
 ok( $c->{result} == 4,'config innards have what we expect');
 
-
-
-
-
-my $iam = whoami();
-
-ok($iam, "whoami() $iam");
-
-
-my $tmpd;
-ok($tmpd = mktmpdir(),'make temp dir returns');
-ok($tmpd=~/\//, 'tmp dir has at least one slash');
-ok(-d $tmpd, "temp dir exists");
 
 
 

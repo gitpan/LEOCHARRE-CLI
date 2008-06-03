@@ -3,10 +3,12 @@ use strict;
 use Carp;
 use Cwd;
 use vars qw($VERSION);
-$VERSION = sprintf "%d.%02d", q$Revision: 1.16 $ =~ /(\d+)/g;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.18 $ =~ /(\d+)/g;
 
 $main::DEBUG = 0;
 $main::USAGE = 0;
+
+
 
 sub main::DEBUG : lvalue {
    $main::DEBUG;   
@@ -18,6 +20,19 @@ sub main::debug {
    print STDERR " $0, $msg\n";
    return 1;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+# BEGIN USER
 
 sub main::whoami {	
 	unless (defined $::WHOAMI){
@@ -77,6 +92,13 @@ sub main::get_gid {
   return $id;
 }
 
+# END USER
+
+
+
+
+
+
 sub main::get_mode {
    my $abs = shift;
    require File::chmod;
@@ -84,6 +106,16 @@ sub main::get_mode {
    return $mod;
 }
 
+
+
+
+
+
+
+
+
+
+# BEGIN GOPTS AND ARGS
 sub main::gopts {
 	my $opts = shift;
 	$opts||='';
@@ -120,38 +152,8 @@ sub main::gopts {
 	return $o;
 }
 
-sub main::man {
 
-   if( defined $main::usage ){
-      my $output = $main::usage;
-      print STDERR "$output\n";
-   }
 
-   elsif( defined &main::usage ){
-      my $output = main::usage();
-      print STDERR "$output\n";
-   }
-
-   else {
-   	my $name = main::_scriptname();
-      print `man $name`; 
-   }
-
-   exit;
-}
-
-sub main::_scriptname_only{
-	my $name = $0 or return;
-	$name=~s/^.+\///;
-   $name=~s/\.\w{1,}$//;
-	return $name;
-}
-
-sub main::_scriptname{
-	my $name = $0 or return;
-	$name=~s/^.+\///;
-	return $name;
-}
 
 sub main::argv_aspaths {
 	my @argv;
@@ -207,22 +209,94 @@ sub main::yn {
         return $val;
 }
 
+# END GOPTS AND ARGS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# BEIGN HELP , USAGE, MAN ETC
+
+sub main::man {
+
+   if( defined $main::usage ){
+      my $output = $main::usage;
+      print STDERR "$output\n";
+   }
+
+   elsif( defined &main::usage ){
+      my $output = main::usage();
+      print STDERR "$output\n";
+   }
+
+   else {
+   	my $name = main::_scriptname();
+      print `man $name`; 
+   }
+
+   exit;
+}
+
+# END HELP
+
+
+
+
+
+
+
+
+sub main::_scriptname{
+	my $name = $0 or return;
+	$name=~s/^.+\///;
+	return $name;
+}
+
+sub main::_scriptname_only{
+	my $name = $0 or return;
+	$name=~s/^.+\///;
+   $name=~s/\.\w{1,}$//;
+	return $name;
+}
+
 sub main::config {
 	my $abs_conf = shift;
+
    $abs_conf ||= main::suggest_abs_conf();
+
+   $abs_conf 
+      or warn("Cannot determine abs_conf automatically and no arg passed")
+      and return;
+
+	-f $abs_conf 
+      or warn("$0, [$abs_conf] does not exist.") 
+      and return;
+
 	require YAML;
-	-f $abs_conf or warn("$0, [$abs_conf] does not exist.") and return;
-	my $conf = YAML::LoadFile($abs_conf);
-	return $conf;
+	return (YAML::LoadFile($abs_conf));
 }
 
 sub main::suggest_abs_conf {
-   $ENV{HOME} or return;
+   $ENV{HOME} or warn("ENV HOME not set") and return;
    return ( $ENV{HOME}.'/'. main::_scriptname_only().'.conf');
 }
 
 sub main::suggest_abs_log {
-   $ENV{HOME} or return;
+   $ENV{HOME} or warn("ENV HOME not set") and return;
    return ( $ENV{HOME}.'/'. main::_scriptname_only().'.log');
 }
 
@@ -233,6 +307,13 @@ sub main::mktmpdir {
    return $d;
 }
 
+
+
+
+
+
+# BEGIN OPERATING SYSTEM AND WITCH
+
 sub main::os_is_win {
    for(qw(dos os2 mswin32)){
       $^O=~/^$_/i or next;
@@ -240,6 +321,29 @@ sub main::os_is_win {
    }
    return 0;   
 }
+
+sub witch {
+   my $bin = shift;
+   require File::Which;
+   my $binpath = File::Which::which($bin) 
+      or dye("Can't find $bin, is it installed?");      
+   return $binpath;
+}
+
+
+
+sub say { print STDERR (+shift)."\n" and return 1; }
+sub dye { say("$0, ".(+shift)) and exit 1; }
+
+*::witch = \&witch;
+*::say   = \&say;
+*::dye   = \&dye;
+
+# END OPERATING SYSTEM AND WITCH
+
+
+
+
 
 
 1;
@@ -256,6 +360,8 @@ LEOCHARRE::CLI - useful subs for coding cli scripts
 
 I use this module as base for my CLI scripts.
 It standardizes some things.
+
+
 
 =head1 PROMPT
 
@@ -275,8 +381,7 @@ argument is the question for the user
 
 
 
-
-=head1 DEBUG
+=head1 FEEDBACK DEBUG ETC
 
 =head2 DEBUG()
 
@@ -289,6 +394,14 @@ Use to print to STDERR if DEBUG is on.
 
    debug('reached that part in our program..');
 
+
+=head2 say()
+
+Prints to stderr returns true, similar to warn.
+
+=head2 dye()
+
+Similar to dye, implies there is no error with script, but with a param, etc.
 
 
 =cut
@@ -340,6 +453,14 @@ With this you can test for the user on system.
 
 Argument is username.
 Returns boolean.
+
+=head2 witch()
+
+Arg is binary name (like find, man, etc), returns abs path to binary or dies with error.
+
+   my $bin = witch('tesseract');
+
+Will exit and say that tesseract is not installed etc.
 
 =cut
 
@@ -458,6 +579,32 @@ Will use HOME environment variable.
 
 
 =head1 HELP
+
+Whenever a script is calledwith -h it should output help.
+
+Example script:
+
+   use base 'LEOCHARRE::CLI';
+
+   sub usage {
+      return qq{
+      $0
+
+      OPTIONS
+
+         -h help
+      };
+   }
+
+And then..
+
+   script -h
+
+
+=head2 usage()
+
+You should define this sub in your script.
+It should return OPTION and PARAMETER flags etc.
 
 =head2 man()
 

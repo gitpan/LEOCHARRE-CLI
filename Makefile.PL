@@ -1,4 +1,4 @@
-$^O=~/mswin32/i and print("OS unsupported") and exit;
+if( $^O=~/mswin32/i ) { print("OS unsupported") and exit; }
 use ExtUtils::MakeMaker;
 WriteMakefile(
 	NAME => 'LEOCHARRE::CLI',
