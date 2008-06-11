@@ -3,12 +3,10 @@ use strict;
 use Carp;
 use Cwd;
 use vars qw($VERSION);
-$VERSION = sprintf "%d.%02d", q$Revision: 1.18 $ =~ /(\d+)/g;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.19 $ =~ /(\d+)/g;
 
 $main::DEBUG = 0;
 $main::USAGE = 0;
-
-
 
 sub main::DEBUG : lvalue {
    $main::DEBUG;   
@@ -31,7 +29,6 @@ sub main::debug {
 
 
 
-
 # BEGIN USER
 
 sub main::whoami {	
@@ -43,6 +40,7 @@ sub main::whoami {
 			$::WHOAMI = $whoami;	
 		}
 		else {
+         warn("whoami bin path not found.");
 			$::WHOAMI = 0;
 			return;	
 		}

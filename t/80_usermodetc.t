@@ -21,6 +21,12 @@ my $is_win = os_is_win();
 ok(1,"os is win? $is_win\n");
  
 my $me = whoami();
+if (!$me){
+   ok(1,'Skipping user whoami etc, cant get whoami()');
+   exit;
+}
+
+
 ok($me,"iam $me");
 if( ! running_as_root() ){
    ok(1,'rest of tests cannot be run unless you are root.');
